@@ -1,0 +1,261 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+- AWS::Serverless-2016-10-31
+- AWS::CodeStar
+
+Parameters:
+  ProjectId:
+    Type: String
+    Description: CodeStar projectId used to associate new resources to team members
+
+Resources:
+
+  RatingBotLambdaHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: rating-bot.lambda_handler
+      Description: Function to fulfill the session rating Lex bot intents (CodeStar)
+      Runtime: python2.7
+      Role: !GetAtt RatingBotIAMRole.Arn
+      Tracing: Active
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref RatingBotSessionsTable
+          STREAM_NAME: !Ref KinesisStream
+
+  RatingBotIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        -
+          PolicyName: "KinesisAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - 
+                Effect: "Allow"
+                Action: "kinesis:PutRecord"
+                Resource: "arn:aws:kinesis:us-east-1:554625704737:stream/ElasticsearchStream"
+        -
+          PolicyName: "XRayTracingPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - 
+                Effect: "Allow"
+                Action: 
+                  - "xray:PutTraceSegments"
+                  - "xray:PutTelemetryRecords"
+                Resource: "*"
+        -
+          PolicyName: "ComprehendAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - 
+                Effect: "Allow"
+                Action: "comprehend:DetectSentiment"
+                Resource: "*"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: "AllowLambdaServiceToAssumeRole"
+            Effect: "Allow"
+            Action: 
+              - "sts:AssumeRole"
+            Principal:
+              Service: 
+                - "lambda.amazonaws.com"
+
+  RatingBotSessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "Title"
+          AttributeType: "S"
+        - 
+          AttributeName: "FullDate"
+          AttributeType: "S"
+        -
+          AttributeName: "LocationCity"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "FullDate"
+          KeyType: "HASH"
+        -
+          AttributeName: "Title"
+          KeyType: "RANGE"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "1"
+        WriteCapacityUnits: "1"
+      GlobalSecondaryIndexes:
+        -
+          IndexName: "Cities"
+          KeySchema:
+            -
+              AttributeName: "LocationCity"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "KEYS_ONLY"
+          ProvisionedThroughput: 
+            ReadCapacityUnits: "1"
+            WriteCapacityUnits: "1"
+
+  KinesisStream:
+    Type: "AWS::Kinesis::Stream"
+    Properties: 
+      Name: "ElasticsearchStream"
+      RetentionPeriodHours: 24
+      ShardCount: 1
+
+  FirehoseDeliveryStream:
+    DependsOn:
+      - KinesisStream
+      - KinesisStreamAccessPolicy
+      - FirehoseDeliveryPolicy
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties: 
+      DeliveryStreamType: KinesisStreamAsSource
+      KinesisStreamSourceConfiguration: 
+        KinesisStreamARN: !GetAtt KinesisStream.Arn
+        RoleARN: !GetAtt FirehoseDeliveryRole.Arn
+      ElasticsearchDestinationConfiguration: 
+        BufferingHints: 
+          IntervalInSeconds: 60
+          SizeInMBs: 50
+        CloudWatchLoggingOptions: 
+          Enabled: true
+          LogGroupName: "FirehoseStream"
+          LogStreamName: "elasticsearchDelivery"
+        DomainARN: !GetAtt FirehoseDeliveryESCluster.DomainArn
+        IndexName: "ratingindex"
+        IndexRotationPeriod: "NoRotation"
+        TypeName: "fromFirehose"
+        RetryOptions: 
+          DurationInSeconds: "60"
+        RoleARN: !GetAtt FirehoseDeliveryRole.Arn
+        S3BackupMode: AllDocuments
+        S3Configuration: 
+          BucketARN: !GetAtt FirehoseDeliveryS3bucket.Arn
+          BufferingHints: 
+            IntervalInSeconds: "60"
+            SizeInMBs: "50"
+          CompressionFormat: "UNCOMPRESSED"
+          Prefix: "firehose-es-backup/"
+          RoleARN: !GetAtt FirehoseDeliveryRole.Arn
+
+  FirehoseDeliveryS3bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+
+  FirehoseDeliveryRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref 'AWS::AccountId'
+
+  KinesisStreamAccessPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: kinesis_stream_access_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kinesis:DescribeStream'
+              - 'kinesis:GetShardIterator'
+              - 'kinesis:GetRecords'
+            Resource:
+              - !GetAtt KinesisStream.Arn
+      Roles:
+        - !Ref FirehoseDeliveryRole
+
+  FirehoseDeliveryPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: firehose_delivery_policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:AbortMultipartUpload'
+              - 's3:GetBucketLocation'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:ListBucketMultipartUploads'
+              - 's3:PutObject'
+            Resource:
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref FirehoseDeliveryS3bucket
+              - !Join 
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref FirehoseDeliveryS3bucket
+                  - '*'
+          - Effect: Allow
+            Action:
+              - "es:DescribeElasticsearchDomain"
+              - "es:DescribeElasticsearchDomains"
+              - "es:DescribeElasticsearchDomainConfig"
+              - "es:ESHttpPost"
+              - "es:ESHttpPut"
+            Resource:
+              - !Join
+                - ''
+                - - 'arn:aws:es:'
+                  - !Ref "AWS::Region"
+                  - ':'
+                  - !Ref "AWS::AccountId"
+                  - ':'
+                  - "domain/rating-bot-es"
+              - !Join
+                - ''
+                - - 'arn:aws:es:'
+                  - !Ref "AWS::Region"
+                  - ':'
+                  - !Ref "AWS::AccountId"
+                  - ':'
+                  - "domain/rating-bot-es/*"
+      Roles:
+        - !Ref FirehoseDeliveryRole
+
+  FirehoseDeliveryESCluster:
+    Type: "AWS::Elasticsearch::Domain"
+    Properties:
+      DomainName: "rating-bot-es"
+      ElasticsearchVersion: "5.5"
+      ElasticsearchClusterConfig: 
+        DedicatedMasterEnabled: "false"
+        InstanceCount: "2"
+        ZoneAwarenessEnabled: "true"
+        InstanceType: "t2.medium.elasticsearch"
+      EBSOptions: 
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: 10
+        VolumeType: "gp2"
+      SnapshotOptions: 
+        AutomatedSnapshotStartHour: "0"
+      AdvancedOptions: 
+        rest.action.multi.allow_explicit_index: "true"
