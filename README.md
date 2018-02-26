@@ -1,33 +1,36 @@
-Welcome to the AWS CodeStar sample web service
-==============================================
+Welcome to Rating-Bot, an Amazon Lex Chatbot Demo
+=================================================
 
-This sample code helps get you started with a simple Python web service using
-AWS Lambda and Amazon API Gateway.
+This sample code helps get you started with a Python backend for an Amazon Lex Chatbot. This bot collects feedback scores and feedback comments from conference talks and stores them in an Elasticsearch cluster for visualisation via Kibana.
+
+AWS Services that are used:
+
+ - Amazon Lex
+ - AWS Lambda
+ - AWS X-Ray
+ - Amazon Comprehend
+ - Amazon Kinesis Streams
+ - Amazon Kinesis Firehose
+ - Amazon Elasticsearch
+ - AWS IAM
 
 What's Here
 -----------
 
-This sample includes:
+This sample was built during the AWS CodeStart CI/CD environment and contains the following files:
 
 * README.md - this file
-* buildspec.yml - this file is used by AWS CodeBuild to package your
-  application for deployment to AWS Lambda
-* index.py - this file contains the sample Python code for the web service
-* template.yml - this file contains the Serverless Application Model (SAM) used
-  by AWS Cloudformation to deploy your application to AWS Lambda and Amazon API
-  Gateway.
+* buildspec.yml - this file is used by AWS CodeBuild to package your application for deployment to AWS Lambda
+* index.py - this file contains the sample Python code for the Amazon Lex Validation & Fulfillment function 
+* template.yml - this file contains the Serverless Application Model (SAM) and CloudFormation resources used by AWS Cloudformation to deploy your application to AWS Lambda and creat the other resources required for this application.
+* requirements.txt - Python dependency management (used by AWS CodeBuild)
 
 
 What Do I Do Next?
 ------------------
 
-If you have checked out a local copy of your AWS CodeCommit repository you can
-start making changes to the sample code.  We suggest making a small change to
-index.py first, so you can see how changes pushed to your project's repository
-in AWS CodeCommit are automatically picked up by your project pipeline and
-deployed to AWS Lambda and Amazon API Gateway.  (You can watch the pipeline
-progress on your AWS CodeStar project dashboard.)  Once you've seen how that
-works, start developing your own code, and have fun!
+Learn more about Amazon Lex and how to works here:
+https://aws.amazon.com/lex
 
 Learn more about Serverless Application Model (SAM) and how it works here:
 https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md
