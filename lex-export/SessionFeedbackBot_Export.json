@@ -1,0 +1,1466 @@
+{
+  "metadata": {
+    "schemaVersion": "1.0",
+    "importType": "LEX",
+    "importFormat": "JSON"
+  },
+  "resource": {
+    "name": "SessionFeedbackBot",
+    "version": "26",
+    "intents": [
+      {
+        "name": "Thanks",
+        "version": "3",
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+            "messageVersion": "1.0"
+          }
+        },
+        "sampleUtterances": [
+          "thanks",
+          "thank you",
+          "that's great",
+          "thank you so much",
+          "thanks so much",
+          "thank you very much",
+          "cheers"
+        ],
+        "slots": []
+      },
+      {
+        "rejectionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Okay, maybe next time."
+            }
+          ]
+        },
+        "name": "ProvideFeedback",
+        "version": "15",
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+            "messageVersion": "1.0"
+          }
+        },
+        "sampleUtterances": [
+          "leave feedback",
+          "leave feedback on a session",
+          "provide feedback",
+          "give feedback",
+          "make comments",
+          "leave a comment on a session",
+          "provide comments",
+          "leave a comment",
+          "make a comment",
+          "leave some feedback",
+          "i would like to give some feedback on a talk"
+        ],
+        "slots": [
+          {
+            "name": "SessionComments",
+            "slotConstraint": "Required",
+            "slotType": "SessionFeedback",
+            "slotTypeVersion": "1",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Please provide your feedback now."
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 4,
+            "sampleUtterances": []
+          },
+          {
+            "name": "SessionDate",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.DATE",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What date was the session on?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 2,
+            "sampleUtterances": []
+          },
+          {
+            "name": "SessionID",
+            "slotConstraint": "Required",
+            "slotType": "SessionID",
+            "slotTypeVersion": "2",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Which session do you want to leave feedback on?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 1,
+            "sampleUtterances": []
+          },
+          {
+            "name": "SessionLocation",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.EUROPE_CITY",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Which city did this session take place in?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 3,
+            "sampleUtterances": []
+          }
+        ],
+        "confirmationPrompt": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Are you sure you want to submit this feedback?"
+            }
+          ],
+          "maxAttempts": 3
+        },
+        "dialogCodeHook": {
+          "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+          "messageVersion": "1.0"
+        }
+      },
+      {
+        "name": "CancelRequest",
+        "version": "8",
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+            "messageVersion": "1.0"
+          }
+        },
+        "sampleUtterances": [
+          "cancel",
+          "end",
+          "bye bye",
+          "exit",
+          "bye",
+          "it doesn't matter",
+          "good bye",
+          "goodbye"
+        ],
+        "slots": []
+      },
+      {
+        "rejectionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Okay. Maybe next time?"
+            }
+          ]
+        },
+        "name": "RateSession",
+        "version": "20",
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+            "messageVersion": "1.0"
+          }
+        },
+        "sampleUtterances": [
+          "I would like to score a session",
+          "I would like to rate a session",
+          "Rate session",
+          "Score session",
+          "Give a session a score",
+          "Give a session a rating",
+          "Provide a rating",
+          "Provide a score",
+          "rate",
+          "score",
+          "i would like to rate a talk",
+          "i'd like to leave a rating"
+        ],
+        "slots": [
+          {
+            "name": "SessionDate",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.DATE",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What date was the session on?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 2,
+            "sampleUtterances": []
+          },
+          {
+            "name": "SessionID",
+            "slotConstraint": "Required",
+            "slotType": "SessionID",
+            "slotTypeVersion": "2",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Which session do you want to rate?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 1,
+            "sampleUtterances": []
+          },
+          {
+            "name": "SessionLocation",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.EUROPE_CITY",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Where did this event take place?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 3,
+            "sampleUtterances": []
+          },
+          {
+            "name": "SessionScore",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.NUMBER",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "How would you rate this session, between one and five, with five being the best??"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 4,
+            "sampleUtterances": []
+          }
+        ],
+        "confirmationPrompt": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Are you sure you want to submit this rating?"
+            }
+          ],
+          "maxAttempts": 3
+        },
+        "dialogCodeHook": {
+          "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+          "messageVersion": "1.0"
+        }
+      },
+      {
+        "name": "HelpMe",
+        "version": "14",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "Help",
+          "Help Me",
+          "I need help",
+          "how do I use this",
+          "What does this do",
+          "Hello",
+          "i love you",
+          "Hola",
+          "Yo",
+          "Hey",
+          "Hi",
+          "What can you do",
+          "Hey up"
+        ],
+        "slots": [],
+        "conclusionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Hi there! Right now I can rate or take feedback on sessions or events where you've seen Ian speak. Just say 'I want to rate a session' or 'I want to leave feedback'. I need to know the date, time, location and the session title. If you want to know more about how I work, ask for GitHub details and check out the code, or ask for Ian's email and drop him an email."
+            }
+          ]
+        }
+      },
+      {
+        "name": "TwitterInfo",
+        "version": "2",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "Twitter",
+          "What's your Twitter account",
+          "Where can I find you on Twitter",
+          "Are you on Twitter",
+          "Give me your Twitter details",
+          "What's your Twitter",
+          "I want to follow you on Twitter",
+          "what about twitter"
+        ],
+        "slots": [],
+        "conclusionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Sure. I'm on Twitter at https://twitter.com/IanMmmm. Follow me there."
+            },
+            {
+              "contentType": "PlainText",
+              "content": "You can find me on Twitter at https://twitter.com/IanMmmm. Don't forget to click follow :)"
+            }
+          ]
+        }
+      },
+      {
+        "name": "EmailInfo",
+        "version": "1",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "what's your email",
+          "can i email you",
+          "what's your email address",
+          "email",
+          "email address",
+          "how can i email you",
+          "what's your email again",
+          "tell me you email"
+        ],
+        "slots": [],
+        "conclusionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "You can reach me via email at ianm@amazon.com"
+            },
+            {
+              "contentType": "PlainText",
+              "content": "My email address is ianm@amazon.com"
+            }
+          ]
+        }
+      },
+      {
+        "name": "Testing",
+        "version": "6",
+        "fulfillmentActivity": {
+          "type": "CodeHook",
+          "codeHook": {
+            "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+            "messageVersion": "1.0"
+          }
+        },
+        "sampleUtterances": [
+          "Testing testing testing",
+          "Test",
+          "Testing",
+          "Test test",
+          "Test test test"
+        ],
+        "slots": [
+          {
+            "name": "TestTarget",
+            "slotConstraint": "Required",
+            "slotType": "OpenTestTarget",
+            "slotTypeVersion": "1",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Which feature to test?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 1,
+            "sampleUtterances": []
+          }
+        ],
+        "dialogCodeHook": {
+          "uri": "arn:aws:lambda:us-east-1:554625704737:function:awscodestar-rating-bot-lamb-RatingBotLambdaHandler-FTBHSA7D0BG8",
+          "messageVersion": "1.0"
+        }
+      },
+      {
+        "rejectionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Okay, maybe next time then?"
+            }
+          ]
+        },
+        "name": "GetStickers",
+        "version": "8",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "I'd like some stickers",
+          "Can you send me some stickers",
+          "I want some AWS stickers",
+          "Can you post me out some stickers",
+          "How do I get stickers",
+          "Can I get some stickers please"
+        ],
+        "slots": [
+          {
+            "name": "City",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.EUROPE_CITY",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "I need your postal address. Which city are you in?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 3,
+            "sampleUtterances": []
+          },
+          {
+            "name": "Country",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.Country",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Which country are you in please?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 6,
+            "sampleUtterances": []
+          },
+          {
+            "name": "EmailAddress",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.EmailAddress",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "Can I have your email address please? Just in case there's a problem and I need to reach you?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 7,
+            "sampleUtterances": []
+          },
+          {
+            "name": "FirstName",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.US_FIRST_NAME",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What is your first name?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 1,
+            "sampleUtterances": []
+          },
+          {
+            "name": "LastName",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.US_LAST_NAME",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What is your last name?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 2,
+            "sampleUtterances": []
+          },
+          {
+            "name": "Street",
+            "slotConstraint": "Required",
+            "slotType": "AMAZON.PostalAddress",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What's your house number or name and street address please?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 4,
+            "sampleUtterances": []
+          },
+          {
+            "name": "UKPostcode",
+            "slotConstraint": "Required",
+            "slotType": "UKPostcodes",
+            "slotTypeVersion": "1",
+            "valueElicitationPrompt": {
+              "messages": [
+                {
+                  "contentType": "PlainText",
+                  "content": "What's your postcode?"
+                }
+              ],
+              "maxAttempts": 2
+            },
+            "priority": 5,
+            "sampleUtterances": []
+          }
+        ],
+        "confirmationPrompt": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "Thanks for the info, shall I submit your request?"
+            }
+          ],
+          "maxAttempts": 3
+        }
+      },
+      {
+        "name": "GithubInfo",
+        "version": "3",
+        "fulfillmentActivity": {
+          "type": "ReturnIntent"
+        },
+        "sampleUtterances": [
+          "what's your github",
+          "give me your github details",
+          "can i have your github details",
+          "what's your github address",
+          "github",
+          "what about github",
+          "are you on github",
+          "where can i get the code for this demo",
+          "can i get the code for this demo"
+        ],
+        "slots": [],
+        "conclusionStatement": {
+          "messages": [
+            {
+              "contentType": "PlainText",
+              "content": "You can find my Github account at https://github.com/ianmas-aws"
+            },
+            {
+              "contentType": "PlainText",
+              "content": "My Github account is at https://github.com/ianmas-aws"
+            },
+            {
+              "contentType": "PlainText",
+              "content": "You can find me on Github at https://github.com/ianmas-aws"
+            }
+          ]
+        }
+      }
+    ],
+    "slotTypes": [
+      {
+        "description": "Free form text feedback",
+        "name": "SessionFeedback",
+        "version": "1",
+        "enumerationValues": [
+          {
+            "value": "I didn't like it",
+            "synonyms": []
+          },
+          {
+            "value": "Lots of great details",
+            "synonyms": []
+          },
+          {
+            "value": "You spoke too fast ",
+            "synonyms": []
+          },
+          {
+            "value": "Should have included a demo",
+            "synonyms": []
+          },
+          {
+            "value": "This was really good",
+            "synonyms": []
+          }
+        ],
+        "valueSelectionStrategy": "ORIGINAL_VALUE"
+      },
+      {
+        "name": "OpenTestTarget",
+        "version": "1",
+        "enumerationValues": [
+          {
+            "value": "A",
+            "synonyms": []
+          },
+          {
+            "value": "B",
+            "synonyms": []
+          },
+          {
+            "value": "C",
+            "synonyms": []
+          },
+          {
+            "value": "D",
+            "synonyms": []
+          },
+          {
+            "value": "E",
+            "synonyms": []
+          }
+        ],
+        "valueSelectionStrategy": "ORIGINAL_VALUE"
+      },
+      {
+        "description": "ID for the Session that we are collecting data about",
+        "name": "SessionID",
+        "version": "2",
+        "enumerationValues": [
+          {
+            "value": "An Introduction to Amazon Lex"
+          },
+          {
+            "value": "Getting started with AWS Lambda"
+          },
+          {
+            "value": "Amazon Lex Session"
+          },
+          {
+            "value": "DEV405"
+          },
+          {
+            "value": "ABC123"
+          },
+          {
+            "value": "Chatbots Session"
+          },
+          {
+            "value": "Building Chatbots with Amazon Lex"
+          },
+          {
+            "value": "Getting started with Amazon Lex"
+          },
+          {
+            "value": "AI123"
+          }
+        ]
+      },
+      {
+        "description": "UK Postcodes",
+        "name": "UKPostcodes",
+        "version": "1",
+        "enumerationValues": [
+          {
+            "value": "TR14 7JA"
+          },
+          {
+            "value": "PL26 6JN"
+          },
+          {
+            "value": "CO13 9YQ"
+          },
+          {
+            "value": "AB4 4BE"
+          },
+          {
+            "value": "CH26 9BD"
+          },
+          {
+            "value": "MK8 8WS"
+          },
+          {
+            "value": "SN1 4JP"
+          },
+          {
+            "value": "SA14 9WA"
+          },
+          {
+            "value": "LA12 0RR"
+          },
+          {
+            "value": "PR3 1WW"
+          },
+          {
+            "value": "PL16 0DU"
+          },
+          {
+            "value": "SG6 1NP"
+          },
+          {
+            "value": "CA14 5LB"
+          },
+          {
+            "value": "SK15 2AA"
+          },
+          {
+            "value": "BS10 6ST"
+          },
+          {
+            "value": "SK7 2EH"
+          },
+          {
+            "value": "WS13 6XG"
+          },
+          {
+            "value": "BS2 9UF"
+          },
+          {
+            "value": "S3 9DQ"
+          },
+          {
+            "value": "RM18 8JU"
+          },
+          {
+            "value": "BB5 2NY"
+          },
+          {
+            "value": "BN1 2EL"
+          },
+          {
+            "value": "CB21 4DG"
+          },
+          {
+            "value": "YO11 2SF"
+          },
+          {
+            "value": "RG11 2RU"
+          },
+          {
+            "value": "CF64 2SF"
+          },
+          {
+            "value": "NE21 5DH"
+          },
+          {
+            "value": "BT19 6FH"
+          },
+          {
+            "value": "EX14 2FB"
+          },
+          {
+            "value": "BT67 0NY"
+          },
+          {
+            "value": "TW1 4WQ"
+          },
+          {
+            "value": "M33 7AB"
+          },
+          {
+            "value": "WA7 3HF"
+          },
+          {
+            "value": "BD7 3JA"
+          },
+          {
+            "value": "B65 9SW"
+          },
+          {
+            "value": "CV1 2WT"
+          },
+          {
+            "value": "B1 1EU"
+          },
+          {
+            "value": "CF43 4PG"
+          },
+          {
+            "value": "WF14 8HT"
+          },
+          {
+            "value": "BL78 7NA"
+          },
+          {
+            "value": "LE8 0HH"
+          },
+          {
+            "value": "SR8 2YR"
+          },
+          {
+            "value": "PL27 6QN"
+          },
+          {
+            "value": "SA34 0DA"
+          },
+          {
+            "value": "KY6 3AR"
+          },
+          {
+            "value": "SL2 5AP"
+          },
+          {
+            "value": "KY3 0BW"
+          },
+          {
+            "value": "W1J 9HE"
+          },
+          {
+            "value": "SN5 7BU"
+          },
+          {
+            "value": "SW6 5BX"
+          },
+          {
+            "value": "NE44 6DF"
+          },
+          {
+            "value": "S11 8YR"
+          },
+          {
+            "value": "B93 0AQ"
+          },
+          {
+            "value": "DY8 1NH"
+          },
+          {
+            "value": "BS15 3AH"
+          },
+          {
+            "value": "HA9 6NQ"
+          },
+          {
+            "value": "YO8 6QN"
+          },
+          {
+            "value": "HU18 1YT"
+          },
+          {
+            "value": "TQ3 3YZ"
+          },
+          {
+            "value": "CO9 1LX"
+          },
+          {
+            "value": "EX10 8AF"
+          },
+          {
+            "value": "WN8 7PH"
+          },
+          {
+            "value": "B70 7AG"
+          },
+          {
+            "value": "CW1 5TL"
+          },
+          {
+            "value": "DH3 3UG"
+          },
+          {
+            "value": "S9 4BJ"
+          },
+          {
+            "value": "TN21 8UJ"
+          },
+          {
+            "value": "NPT 5DB"
+          },
+          {
+            "value": "BS20 1AG"
+          },
+          {
+            "value": "NR11 8NW"
+          },
+          {
+            "value": "UB6 7LE"
+          },
+          {
+            "value": "RH19 2NT"
+          },
+          {
+            "value": "KA11 2FD"
+          },
+          {
+            "value": "NG24 2TF"
+          },
+          {
+            "value": "CM3 5EP"
+          },
+          {
+            "value": "B73 6SA"
+          },
+          {
+            "value": "EH45 8BA"
+          },
+          {
+            "value": "HA1 4LY"
+          },
+          {
+            "value": "LL53 7UT"
+          },
+          {
+            "value": "PO18 9LG"
+          },
+          {
+            "value": "AL1 4XN"
+          },
+          {
+            "value": "S20 6BW"
+          },
+          {
+            "value": "AL8 6SN"
+          },
+          {
+            "value": "BA4 5LL"
+          },
+          {
+            "value": "WN6 8AD"
+          },
+          {
+            "value": "L33 7ED"
+          },
+          {
+            "value": "ML5 2BB"
+          },
+          {
+            "value": "OX3 8RF"
+          },
+          {
+            "value": "WA11 9ND"
+          },
+          {
+            "value": "NR13 6PP"
+          },
+          {
+            "value": "N16 7EB"
+          },
+          {
+            "value": "HU13 0TA"
+          },
+          {
+            "value": "OL4 3JY"
+          },
+          {
+            "value": "CV23 0NQ"
+          },
+          {
+            "value": "HA3 9HP"
+          },
+          {
+            "value": "TR18 4YQ"
+          },
+          {
+            "value": "OX11 7YL"
+          },
+          {
+            "value": "NE20 9UB"
+          },
+          {
+            "value": "BB2 2PJ"
+          },
+          {
+            "value": "WV11 2AX"
+          },
+          {
+            "value": "KY11 1HD"
+          },
+          {
+            "value": "HU17 8RG"
+          },
+          {
+            "value": "RG10 9PS"
+          },
+          {
+            "value": "CF8 8SA"
+          },
+          {
+            "value": "CH43 9HX"
+          },
+          {
+            "value": "TS6 7DF"
+          },
+          {
+            "value": "SM2 6TB"
+          },
+          {
+            "value": "HU7 4JQ"
+          },
+          {
+            "value": "G20 7DS"
+          },
+          {
+            "value": "DE56 2AF"
+          },
+          {
+            "value": "BN1 5BA"
+          },
+          {
+            "value": "PR11 1BB"
+          },
+          {
+            "value": "GU7 3JZ"
+          },
+          {
+            "value": "TS1 9FW"
+          },
+          {
+            "value": "B12 0EN"
+          },
+          {
+            "value": "BT63 5SX"
+          },
+          {
+            "value": "RG3 5EB"
+          },
+          {
+            "value": "SL6 4PG"
+          },
+          {
+            "value": "YO22 4FJ"
+          },
+          {
+            "value": "DN41 8DS"
+          },
+          {
+            "value": "SE18 5NL"
+          },
+          {
+            "value": "G44 5HH"
+          },
+          {
+            "value": "PE22 0NZ"
+          },
+          {
+            "value": "B23 7DU"
+          },
+          {
+            "value": "WV1 9YP"
+          },
+          {
+            "value": "OL3 7AS"
+          },
+          {
+            "value": "LA6 1PD"
+          },
+          {
+            "value": "BN26 6BY"
+          },
+          {
+            "value": "IV27 4NJ"
+          },
+          {
+            "value": "HP4 2HN"
+          },
+          {
+            "value": "M7 9AJ"
+          },
+          {
+            "value": "L36 4JX"
+          },
+          {
+            "value": "NE12 2BD"
+          },
+          {
+            "value": "GU22 8AW"
+          },
+          {
+            "value": "BD16 3YY"
+          },
+          {
+            "value": "HP9 2RD"
+          },
+          {
+            "value": "WD2 7ZR"
+          },
+          {
+            "value": "EX6 6JU"
+          },
+          {
+            "value": "NG18 5NU"
+          },
+          {
+            "value": "LS28 7YH"
+          },
+          {
+            "value": "BT78 1DP"
+          },
+          {
+            "value": "OL14 7JZ"
+          },
+          {
+            "value": "W1V 6AX"
+          },
+          {
+            "value": "HU8 8TR"
+          },
+          {
+            "value": "PO36 9GT"
+          },
+          {
+            "value": "SO51 6FJ"
+          },
+          {
+            "value": "SE7 7TF"
+          },
+          {
+            "value": "NE26 3PS"
+          },
+          {
+            "value": "BS19 2JT"
+          },
+          {
+            "value": "BS5 7TY"
+          },
+          {
+            "value": "NG15 7UU"
+          },
+          {
+            "value": "BT23 4ZJ"
+          },
+          {
+            "value": "G21 1JA"
+          },
+          {
+            "value": "BH14 9AR"
+          },
+          {
+            "value": "B32 9EB"
+          },
+          {
+            "value": "LA7 7FD"
+          },
+          {
+            "value": "SS8 8BY"
+          },
+          {
+            "value": "TW11 8ZN"
+          },
+          {
+            "value": "CM8 3EB"
+          },
+          {
+            "value": "AB4 2XJ"
+          },
+          {
+            "value": "ST2 7AN"
+          },
+          {
+            "value": "DT2 0NL"
+          },
+          {
+            "value": "SK10 1AR"
+          },
+          {
+            "value": "SW1V 2WS"
+          },
+          {
+            "value": "ME7 2LF"
+          },
+          {
+            "value": "RM10 9DB"
+          },
+          {
+            "value": "BS16 6BP"
+          },
+          {
+            "value": "TF2 7AW"
+          },
+          {
+            "value": "DN21 3AR"
+          },
+          {
+            "value": "AB30 1XT"
+          },
+          {
+            "value": "LE5 9EH"
+          },
+          {
+            "value": "SS7 4EP"
+          },
+          {
+            "value": "DN14 0LA"
+          },
+          {
+            "value": "NN6 9ND"
+          },
+          {
+            "value": "ME10 2DR"
+          },
+          {
+            "value": "TW2 5QP"
+          },
+          {
+            "value": "TQ12 2UB"
+          },
+          {
+            "value": "TQ4 9AW"
+          },
+          {
+            "value": "CF39 8UT"
+          },
+          {
+            "value": "SK4 2DB"
+          },
+          {
+            "value": "S74 9NP"
+          },
+          {
+            "value": "NE12 8BG"
+          },
+          {
+            "value": "FY2 9ER"
+          },
+          {
+            "value": "BS24 8EP"
+          },
+          {
+            "value": "AL2 3SW"
+          },
+          {
+            "value": "CW8 1EG"
+          },
+          {
+            "value": "TR26 1DB"
+          },
+          {
+            "value": "B30 2RG"
+          },
+          {
+            "value": "KA27 8PA"
+          },
+          {
+            "value": "CF81 8LY"
+          },
+          {
+            "value": "M60 7WE"
+          },
+          {
+            "value": "BN11 1ET"
+          },
+          {
+            "value": "ME2 2DH"
+          },
+          {
+            "value": "M33 3QL"
+          },
+          {
+            "value": "W1A 3SW"
+          },
+          {
+            "value": "BB10 2NW"
+          },
+          {
+            "value": "B12 8NS"
+          },
+          {
+            "value": "GL5 1JW"
+          },
+          {
+            "value": "B23 6GN"
+          },
+          {
+            "value": "BA14 6RZ"
+          },
+          {
+            "value": "SO19 6AW"
+          },
+          {
+            "value": "CF44 6NY"
+          },
+          {
+            "value": "CA1 1TQ"
+          },
+          {
+            "value": "BN23 7DR"
+          },
+          {
+            "value": "LL13 0LY"
+          },
+          {
+            "value": "SL5 9PX"
+          },
+          {
+            "value": "BS5 9TY"
+          },
+          {
+            "value": "WA8 9BP"
+          },
+          {
+            "value": "TW10 6TD"
+          },
+          {
+            "value": "GU1 4LA"
+          },
+          {
+            "value": "W2 2QE"
+          },
+          {
+            "value": "TA4 4NZ"
+          },
+          {
+            "value": "TN22 1TU"
+          },
+          {
+            "value": "TF2 9DT"
+          },
+          {
+            "value": "NE6 3QD"
+          },
+          {
+            "value": "LU3 1JW"
+          },
+          {
+            "value": "TQ13 9GJ"
+          },
+          {
+            "value": "OL16 1ZZ"
+          },
+          {
+            "value": "ST5 3PP"
+          },
+          {
+            "value": "PL20 7DB"
+          },
+          {
+            "value": "PE7 0LL"
+          },
+          {
+            "value": "BT11 9LB"
+          },
+          {
+            "value": "WA7 5HB"
+          },
+          {
+            "value": "LE41 9HY"
+          },
+          {
+            "value": "PO15 6BN"
+          },
+          {
+            "value": "W11 4HR"
+          },
+          {
+            "value": "BS49 4FG"
+          },
+          {
+            "value": "CV34 4NZ"
+          },
+          {
+            "value": "NW2 2PZ"
+          },
+          {
+            "value": "AL5 9DR"
+          },
+          {
+            "value": "ST6 1LQ"
+          },
+          {
+            "value": "IP7 7BL"
+          },
+          {
+            "value": "AL1 4NJ"
+          },
+          {
+            "value": "IV30 4JJ"
+          },
+          {
+            "value": "NN4 0LB"
+          },
+          {
+            "value": "PO13 0BN"
+          },
+          {
+            "value": "LS28 8DJ"
+          },
+          {
+            "value": "CH27 9EZ"
+          },
+          {
+            "value": "M11 2BB"
+          },
+          {
+            "value": "BD7 3DT"
+          },
+          {
+            "value": "RH10 2XL"
+          },
+          {
+            "value": "EC1A 9EX"
+          },
+          {
+            "value": "BB2 3WT"
+          },
+          {
+            "value": "SA14 7AD"
+          },
+          {
+            "value": "OX33 1HX"
+          },
+          {
+            "value": "NE26 9BY"
+          },
+          {
+            "value": "BL9 6LQ"
+          },
+          {
+            "value": "SA19 8UY"
+          },
+          {
+            "value": "EN2 0NW"
+          },
+          {
+            "value": "SE22 8EB"
+          }
+        ],
+        "valueSelectionStrategy": "ORIGINAL_VALUE"
+      }
+    ],
+    "voiceId": "Ivy",
+    "childDirected": false,
+    "locale": "en-US",
+    "idleSessionTTLInSeconds": 300,
+    "clarificationPrompt": {
+      "messages": [
+        {
+          "contentType": "PlainText",
+          "content": "Sorry, I don't understand. Try asking for help for details of what I can help with."
+        }
+      ],
+      "maxAttempts": 5
+    },
+    "abortStatement": {
+      "messages": [
+        {
+          "contentType": "PlainText",
+          "content": "Sorry, I couldn't understand what you wanted. Goodbye."
+        }
+      ]
+    }
+  }
+}

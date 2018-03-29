@@ -194,7 +194,7 @@ def isvalid_location(location):
     """
     TODO: move these external to the function and store them in a DynamoDB table
     """
-    valid_locations = ['london', 'leeds', 'manchester', 'tel aviv', 'new york', 'san francisco', 'seattle', 'stockholm', 'dublin', 'helsinki', 'dummy']
+    valid_locations = ['london', 'leeds', 'manchester', 'tel aviv', 'new york', 'san francisco', 'seattle', 'stockholm', 'dublin', 'helsinki', 'singapore','dummy']
     return location.lower() in valid_locations
 
 
@@ -523,22 +523,6 @@ def rate_session(intent_request):
     )
 
 
-def help_me(intent_request):
-    """
-    Performs fulfillment for the HelpMe intent.
-    """
-    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
-
-    return close(
-        session_attributes,
-        'Fulfilled',
-        {
-            'contentType': 'PlainText',
-            'content': 'Hi there! Right now I can rate or take feedback sessions or events where you\'ve seen Ian Massingham speak. Just say "I want to rate a session" or "I want to leave feedback". I need to know the date, time, location and the session identifier. Ian will tell which session identifier to use. Thanks! If you want to know more about how I work, contact Ian via email at ianm@amazon.com'
-        }
-    )
-
-
 def thanks(intent_request):
     """
     Performs fulfillment for the HelpMe intent.
@@ -659,8 +643,6 @@ def dispatch(intent_request):
         return testing(intent_request)
     if intent_name == 'CancelRequest':
         return cancel_request(intent_request)
-    if intent_name == 'HelpMe':
-        return help_me(intent_request)
     if intent_name == 'Thanks':
         return thanks(intent_request)
     if intent_name == 'RateSession':
