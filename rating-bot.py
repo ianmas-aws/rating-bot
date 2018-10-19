@@ -21,8 +21,8 @@ import logging
 import boto3
 import random
 
-
 from aws_xray_sdk.core import patch_all
+
 # patch boto3 for instrumentation and tracing via xray
 patch_all()
 
@@ -31,8 +31,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 # collect environment variables
-kinesisStreamName = os.environ['STREAM_NAME']
-dynamodbTableName = os.environ['TABLE_NAME']
+kinesis_stream_name = os.environ['STREAM_NAME']
+ddb_table_name = os.environ['TABLE_NAME']
 
 
 # --- Helper functions that build all of the responses ---
@@ -136,20 +136,6 @@ def safe_int(n):
     return n
 
 
-def try_ex(func):
-    """
-    Call passed in function in try block. If KeyError is encountered return None.
-    This function is intended to be used to safely access dictionary.
-
-    Note that this function would have negative impact on performance.
-    """
-
-    try:
-        return func()
-    except KeyError:
-        return None
-
-
 def get_day_difference(later_date, earlier_date):
     later_datetime = dateutil.parser.parse(later_date).date()
     earlier_datetime = dateutil.parser.parse(earlier_date).date()
@@ -170,7 +156,7 @@ def build_validation_result(isvalid, violated_slot, message_content):
     }
 
 
-""" --- rating-bot specific validation and helper functions """
+# rating-bot specific validation and helper functions
 
 
 def isfuture_date(datetotest):
@@ -182,7 +168,7 @@ def isfuture_date(datetotest):
         return False
 
 
-def isvalid_sessionscore(scoretotest):
+def isvalid_session_score(scoretotest):
     if (scoretotest >= 1) & (scoretotest <= 5):
         return True
     else:
@@ -190,10 +176,9 @@ def isvalid_sessionscore(scoretotest):
 
 
 def isvalid_location(location):
-    """
-    TODO: move these external to the function and store them in a DynamoDB table
-    """
-    valid_locations = ['london', 'leeds', 'manchester', 'tel aviv', 'new york', 'san francisco', 'seattle', 'stockholm', 'dublin', 'helsinki', 'singapore','dummy']
+    # TODO: move these external to the function and store them in a DynamoDB table
+    valid_locations = ['london', 'leeds', 'manchester', 'tel aviv', 'new york', 'san francisco', 'seattle', 'stockholm',
+                       'dublin', 'helsinki', 'singapore', 'dummy']
     return location.lower() in valid_locations
 
 
@@ -214,79 +199,69 @@ def within_30_days(datetotest):
         return False
 
 
-def isvalid_sessionComments(sessionComments):
-    if sessionComments and len(sessionComments) > 4:
+def isvalid_session_comments(session_comments):
+    if session_comments and len(session_comments) > 4:
         return True
     else:
         return False
 
 
-def safe_attribute(func):
-    """
-    Call passed in function in try block. If KeyError is encountered return None.
-    This function is intended to be used to safely access dictionary.
-
-    Note that this function would have negative impact on performance.
-    """
-    try:
-        return func()
-    except AttributeError:
-        return None
-
-
 # Collect sentiment score (Amazon Comprehend implementation)
-def getComprehendSentimentResult(stringToAnalyze):
-    comprehendClient = boto3.client('comprehend')
-    comprehendClientResponse = comprehendClient.detect_sentiment(
-        Text=stringToAnalyze,
+def get_sentiment(text):
+    comprehend = boto3.client('comprehend')
+    resp = comprehend.detect_sentiment(
+        Text=text,
         LanguageCode='en')
-    del comprehendClientResponse['ResponseMetadata']
-    print(comprehendClientResponse['SentimentScore'][comprehendClientResponse['Sentiment'].title()])
-    comprehendClientResponse['Confidence'] = comprehendClientResponse['SentimentScore'][comprehendClientResponse['Sentiment'].title()]
-    del comprehendClientResponse['SentimentScore']
-    return comprehendClientResponse
+    del resp['ResponseMetadata']
+    print(resp['SentimentScore'][resp['Sentiment'].title()])
+    resp['Confidence'] = resp['SentimentScore'][resp['Sentiment'].title()]
+    del resp['SentimentScore']
+    return resp
 
 
 def validate_rating(slots):
     logger.debug('Initating validation of rating')
-    sessionId = try_ex(lambda: slots['SessionID'])
-    sessionDate = try_ex(lambda: slots['SessionDate'])
-    sessionLocation = try_ex(lambda: slots['SessionLocation'])
-    sessionScore = safe_int(try_ex(lambda: slots['SessionScore']))
+    session_id = slots.get('SessionID')
+    session_date = slots.get('SessionDate')
+    session_location = slots.get('SessionLocation')
+    session_score = safe_int(slots.get('SessionScore'))
 
-    if sessionLocation and not isvalid_location(sessionLocation):
+    if session_location and not isvalid_location(session_location):
         return build_validation_result(
             False,
             'SessionLocation',
-            '{} is not a valid session location.  Which City did this event take place in?  Please can you try a different location?'.format(sessionLocation)
+            '{} is not a valid session location. Which City did this event take place in? Please can you try a different location?'.format(
+                session_location)
         )
 
-    if sessionDate and not isvalid_date(sessionDate):
+    if session_date and not isvalid_date(session_date):
         return build_validation_result(
             False,
             'SessionDate',
-            '{} isn\'t a valid date.  Please enter a date in day month year format, or month day year format if you prefer.'.format(sessionDate)
+            '{} isn\'t a valid date. Please enter a date in day month year format, or month day year format if you prefer.'.format(
+                session_date)
         )
 
-    if (sessionScore or sessionScore == 0) and not isvalid_sessionscore(sessionScore):
+    if (session_score or session_score == 0) and not isvalid_session_score(session_score):
         return build_validation_result(
             False,
             'SessionScore',
-            '{} is not a valid session score.  Please enter a score between 1 and 5'.format(sessionScore)
+            '{} is not a valid session score. Please enter a score between 1 and 5'.format(session_score)
         )
 
-    if sessionDate and isfuture_date(sessionDate):
+    if session_date and isfuture_date(session_date):
         return build_validation_result(
             False,
             'SessionDate',
-            '{} is in the future.  Please enter a date in the past, or today\'s date'.format(sessionDate)
+            '{} is in the future. Please enter a date in the past, or today\'s date'.format(session_date)
         )
 
-    if sessionDate and not within_30_days(sessionDate):
+    if session_date and not within_30_days(session_date):
         return build_validation_result(
             False,
             'SessionDate',
-            '{} is more than 30 days ago and I only record for sessions in the last 30 days.  Please enter a more recent date or leave a rating more promptly next time.'.format(sessionDate)
+            '{} is more than 30 days ago and I only record for sessions in the last 30 days. Please enter a more recent date or leave a rating more promptly next time.'.format(
+                session_date)
         )
 
     return {'isValid': True}
@@ -294,42 +269,45 @@ def validate_rating(slots):
 
 def validate_feedback(slots):
     logger.debug('Initating validation of feedback')
-    sessionId = try_ex(lambda: slots['SessionID'])
-    sessionDate = try_ex(lambda: slots['SessionDate'])
-    sessionLocation = try_ex(lambda: slots['SessionLocation'])
-    sessionComments = try_ex(lambda: slots['SessionComments'])
+    session_id = slots.get('SessionID')
+    session_date = slots.get('SessionDate')
+    session_location = slots.get('SessionLocation')
+    session_comments = slots.get('SessionComments')
 
-    if sessionLocation and not isvalid_location(sessionLocation):
+    if session_location and not isvalid_location(session_location):
         return build_validation_result(
             False,
             'SessionLocation',
-            '{} is not a valid session location.  Which City did this event take place in?  Please can you try a different location?'.format(sessionLocation)
+            '{} is not a valid session location. Which City did this event take place in? Please can you try a different location?'.format(
+                session_location)
         )
 
-    if sessionDate and not isvalid_date(sessionDate):
+    if session_date and not isvalid_date(session_date):
         return build_validation_result(
             False,
             'SessionDate',
-            '{} isn\'t a valid date.  Please enter a date in day month year format, or month day year format if you prefer.'.format(sessionDate)
+            '{} isn\'t a valid date. Please enter a date in day month year format, or month day year format if you prefer.'.format(
+                session_date)
         )
 
-    if sessionDate and isfuture_date(sessionDate):
+    if session_date and isfuture_date(session_date):
         return build_validation_result(
             False,
             'SessionDate',
-            '{} is in the future.  Please enter a date in the past, or today\'s date'.format(sessionDate)
+            '{} is in the future. Please enter a date in the past, or today\'s date'.format(session_date)
         )
 
-    if sessionDate and not within_30_days(sessionDate):
+    if session_date and not within_30_days(session_date):
         return build_validation_result(
             False,
             'SessionDate',
-            '{} is more than 30 days ago and I only record feedback for sessions in the last 30 days.  Please enter a more recent date or leave your feedback more promptly next time.'.format(sessionDate)
+            '{} is more than 30 days ago and I only record feedback for sessions in the last 30 days. Please enter a more recent date or leave your feedback more promptly next time.'.format(
+                session_date)
         )
 
     # once we have everything else, prompt for feedback
 
-    if (sessionId and sessionLocation and sessionDate) and not isvalid_sessionComments(sessionComments):
+    if (session_id and session_location and session_date) and not isvalid_session_comments(session_comments):
         return build_validation_result(
             False,
             'SessionComments',
@@ -340,18 +318,18 @@ def validate_feedback(slots):
 
 
 def validate_testing(slots):
-    logger.debug('Initating validation of testing with slots{}'.format(slots))
-    TestTarget = try_ex(lambda: slots['TestTarget'])
-    if TestTarget and TestTarget not in ["A", "B", "C"]:
+    logger.debug('Initiating validation of testing with slots{}'.format(slots))
+    test_target = slots.get('test_target')
+    if test_target and test_target not in ["A", "B", "C"]:
         return build_validation_result(
             False,
-            'TestTarget',
-            '{} is not a valid test target.  Try A, B or C?'.format(TestTarget)
+            'test_target',
+            '{} is not a valid test target.  Try A, B or C?'.format(test_target)
         )
     return {'isValid': True}
 
 
-""" --- Functions that control the rating-bot bot's behavior --- """
+# Functions that control the rating-bot bot's behavior
 
 
 def provide_feedback(intent_request):
@@ -366,32 +344,31 @@ def provide_feedback(intent_request):
 
     Two options on the sentiment analysis -
     First is to do that here, within the fulfilment function
-    Second is to use another kinesis stream, and wrtie a second lambda function for the sentiment analysis so it's async
+    Second is to use another kinesis stream, and write a second lambda function for the sentiment analysis so it's async
 
     ** for now we're doing it here because Amazon Comprehend doesn't introduce significant latency and it makes for a nice visualisation in Amazon X-Ray
 
     """
+    current_intent = intent_request.get('currentIntent', {})
+    slots = current_intent.get('slots', {})
+    session_id = slots.get('SessionID').title() if slots.get('SessionID') else None
+    session_date = slots.get('SessionDate')
+    session_location = slots.get('SessionLocation').title() if slots.get('SessionLocation') else None
+    session_comments = slots.get('SessionComments')
+    user_id = intent_request.get('user_id')
+    confirmation_status = current_intent.get('confirmationStatus')
+    session_attributes = intent_request.get('sessionAttributes', {})
 
-    sessionId = try_ex(lambda: intent_request['currentIntent']['slots']['SessionID'])
-    sessionDate = try_ex(lambda: intent_request['currentIntent']['slots']['SessionDate'])
-    sessionLocation = try_ex(lambda: intent_request['currentIntent']['slots']['SessionLocation'])
-    sessionComments = try_ex(lambda: intent_request['currentIntent']['slots']['SessionComments'])
-    userId = try_ex(lambda: intent_request['userId'])
-    confirmation_status = intent_request['currentIntent']['confirmationStatus']
-    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
-
-    # next bit of code is redundant, I think
-    sessionFeedback = json.dumps({
+    session_feedback = {
         'RecordType': 'SessionFeedback',
-        'UserId': userId,
-        'Location': safe_attribute(lambda: sessionLocation.title()),
-        'Date': sessionDate,
-        'SessionComments': sessionComments,
-        'ID': safe_attribute(lambda: sessionId.title())
-    })
-    # end redundant block
+        'UserId': user_id,
+        'Location': session_location,
+        'Date': session_date,
+        'SessionComments': session_comments,
+        'ID': session_id
+    }
 
-    session_attributes['currentFeedback'] = sessionFeedback
+    session_attributes['currentFeedback'] = json.dumps(session_feedback)
 
     if intent_request['invocationSource'] == 'DialogCodeHook':
         # Validate any slots which have been specified.  If any are invalid, re-elicit for their value
@@ -399,7 +376,6 @@ def provide_feedback(intent_request):
         if not validation_result['isValid']:
             slots = intent_request['currentIntent']['slots']
             slots[validation_result['violatedSlot']] = None
-
             return elicit_slot(
                 session_attributes,
                 intent_request['currentIntent']['name'],
@@ -407,39 +383,34 @@ def provide_feedback(intent_request):
                 validation_result['violatedSlot'],
                 validation_result['message']
             )
-
-        session_attributes['currentFeedback'] = sessionFeedback
         return delegate(session_attributes, intent_request['currentIntent']['slots'])
 
     # slots are all populated
 
     # get the sentiment score from Amazon Comprehend
-    comprehendSentimentResult = getComprehendSentimentResult(sessionComments)
+    comprehend_sentiment_result = get_sentiment(session_comments)
 
-    # create a new sessionFeedback object containing all the slots, plus the sentiment score. This will be the payload for our Kinesis stream to Elasticsearch
-    sessionFeedback = json.dumps({
-        'RecordType': 'SessionFeedback',
-        'UserId': userId,
-        'Location': safe_attribute(lambda: sessionLocation.title()),
-        'Date': sessionDate,
-        'SessionComments': sessionComments,
-        'comprehendSentimentResult': comprehendSentimentResult,
-        'ID': safe_attribute(lambda: sessionId.title())
-    })
+    # create a new session_feedback object containing all the slots, plus the sentiment score.
+    # This will be the payload for our Kinesis stream to Elasticsearch
+    session_feedback['ComprehendSentimentResult'] = comprehend_sentiment_result
 
     # Leave feedback on the session.  Write log mesage and rating object to Kinesis stream in this case.
     # write some debugging to let us know that we're doing this.
 
-    logger.debug('Attempting to fulfill ProvideFeedback under={}'.format(sessionFeedback))
+    logger.debug('Attempting to fulfill ProvideFeedback under={}'.format(session_feedback))
 
-    # kinesisStreamName comes from the global which we populated with the environment variable
-    kinesisClient = boto3.client('kinesis')
-    putResponse = kinesisClient.put_record(StreamName=kinesisStreamName, Data=sessionFeedback, PartitionKey='partitionKey')
+    # kinesis_stream_name comes from the global which we populated with the environment variable
+    kinesis = boto3.client('kinesis')
+    put_response = kinesis.put_record(
+        StreamName=kinesis_stream_name,
+        Data=session_feedback,
+        PartitionKey='feedback'
+    )
 
-    logger.debug('Rating posted to stream response={}'.format(putResponse))
+    logger.debug('Rating posted to stream response={}'.format(put_response))
 
-    try_ex(lambda: session_attributes.pop('currentFeedback'))
-    session_attributes['lastConfirmedFeedback'] = sessionFeedback
+    session_attributes.pop('currentFeedback', None)
+    session_attributes['lastConfirmedFeedback'] = session_feedback
 
     # return with a confirmation message.
     return close(
@@ -458,25 +429,26 @@ def rate_session(intent_request):
     """
 
     logger.debug('rate_session intent_request={}'.format(intent_request))
+    current_intent = intent_request.get('currentIntent', {})
+    slots = current_intent.get('slots', {})
+    session_id = slots.get('SessionID').title() if slots.get('SessionID') else None
+    session_date = slots.get('SessionDate')
+    session_location = slots.get('SessionLocation').title() if slots.get('SessionLocation') else None
+    user_id = intent_request.get('user_id')
+    confirmation_status = current_intent.get('confirmationStatus')
+    session_attributes = intent_request.get('sessionAttributes', {})
+    session_score = safe_int(slots['SessionScore'])
 
-    sessionId = try_ex(lambda: intent_request['currentIntent']['slots']['SessionID'])
-    sessionDate = try_ex(lambda: intent_request['currentIntent']['slots']['SessionDate'])
-    sessionLocation = try_ex(lambda: intent_request['currentIntent']['slots']['SessionLocation'])
-    sessionScore = safe_int(try_ex(lambda: intent_request['currentIntent']['slots']['SessionScore']))
-    userId = try_ex(lambda: intent_request['userId'])
-    confirmation_status = intent_request['currentIntent']['confirmationStatus']
-    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
-
-    sessionRating = json.dumps({
+    session_rating = json.dumps({
         'RecordType': 'SessionRating',
-        'UserId': userId,
-        'Location': safe_attribute(lambda: sessionLocation.title()),
-        'Date': sessionDate,
-        'Score': sessionScore,
-        'ID': safe_attribute(lambda: sessionId.title())
+        'UserId': user_id,
+        'Location': session_location,
+        'Date': session_date,
+        'Score': session_score,
+        'ID': session_id
     })
 
-    session_attributes['currentRating'] = sessionRating
+    session_attributes['currentRating'] = session_rating
 
     if intent_request['invocationSource'] == 'DialogCodeHook':
         # Validate any slots which have been specified.  If any are invalid, re-elicit for their value
@@ -493,23 +465,26 @@ def rate_session(intent_request):
                 validation_result['message']
             )
 
-        session_attributes['currentRating'] = sessionRating
         return delegate(session_attributes, intent_request['currentIntent']['slots'])
 
     # Slots are all populated.
 
     # Rate the session.  Write log mesage and rating object to Kinesis stream in this case.
     # first, write some debugging to let us know that we're doing this.
-    logger.debug('Attempting to fulfill RateSession under={}'.format(sessionRating))
+    logger.debug('Attempting to fulfill RateSession under={}'.format(session_rating))
 
-#   kinesisStreamName comes from the global which we populate from the environment variable
-    kinesisClient = boto3.client('kinesis')
-    putResponse = kinesisClient.put_record(StreamName=kinesisStreamName, Data=sessionRating, PartitionKey='partitionKey')
+    # kinesis_stream_name comes from the global which we populate from the environment variable
+    kinesis = boto3.client('kinesis')
+    put_response = kinesis.put_record(
+        StreamName=kinesis_stream_name,
+        Data=session_rating,
+        PartitionKey='rating'
+    )
 
-    logger.debug('Rating posted to stream response={}'.format(putResponse))
+    logger.debug('Rating posted to stream response={}'.format(put_response))
 
-    try_ex(lambda: session_attributes.pop('currentRating'))
-    session_attributes['lastConfirmedRating'] = sessionRating
+    session_attributes.pop('currentRating', None)
+    session_attributes['lastConfirmedRating'] = session_rating
 
     # return with a confirmation message
     return close(
@@ -529,7 +504,8 @@ def thanks(intent_request):
     session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
 
     # populate a list with a few options for saying thanks!
-    thanks_content_options = ['No problem!', 'You are very welcome.', 'Happy to help.', 'That\'s fine.', 'No. Thank you.', 'Any time.']
+    thanks_content_options = ['No problem!', 'You are very welcome.', 'Happy to help.', 'That\'s fine.',
+                              'No. Thank you.', 'Any time.']
 
     return close(
         session_attributes,
@@ -548,7 +524,11 @@ def cancel_request(intent_request):
     session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
 
     # popluate a list with a few options that we can use to respond to the cancel intent
-    cancel_content_options = ['No problem. Let me know if I can help with anything else.', 'Let me know if you need anything else in future.', 'OK. Chat to you again soon.']
+    cancel_content_options = [
+        'No problem. Let me know if I can help with anything else.',
+        'Let me know if you need anything else in future.',
+        'OK. Chat to you again soon.'
+    ]
 
     return close(
         session_attributes,
@@ -564,30 +544,15 @@ def testing(intent_request):
     """
     Performs fulfillment for the HelpMe intent.
     """
-    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
+    session_attributes = intent_request.get('sessionAttributes', {})
 
-    featureToTest = try_ex(lambda: intent_request['currentIntent']['slots']['TestTarget'])
+    feature_to_test = intent_request.get('currentIntent', {}).get('slots', {}).get('TestTarget')
 
-    testingTarget = json.dumps({
-        'TestTarget': featureToTest
+    testing_target = json.dumps({
+        'TestTarget': feature_to_test
     })
 
-    """
-
-    # populate list with a few options that we can use to respond to the testing intent
-    testing_content_options = ['Try asking for help to see what I can help with.','I don\'t support testing via a chat session right now.']
-
-    return close(
-        session_attributes,
-        'Fulfilled',
-        {
-            'contentType': 'PlainText',
-            'content': random.choice(testing_content_options)
-        }
-    )
-
-    """
-    session_attributes['currentTest'] = testingTarget
+    session_attributes['currentTest'] = testing_target
 
     if intent_request['invocationSource'] == 'DialogCodeHook':
         # Validate any slots which have been specified.  If any are invalid, re-elicit for their value
@@ -609,11 +574,10 @@ def testing(intent_request):
 
             return response
 
-        session_attributes['currentTest'] = testingTarget
         return delegate(session_attributes, intent_request['currentIntent']['slots'])
 
-    try_ex(lambda: session_attributes.pop('currentTest'))
-    session_attributes['lastConfirmedTest'] = testingTarget
+    session_attributes.pop('currentTest', None)
+    session_attributes['lastConfirmedTest'] = testing_target
     # return with a confirmation message
 
     return close(
@@ -621,9 +585,10 @@ def testing(intent_request):
         'Fulfilled',
         {
             'contentType': 'PlainText',
-            'content': 'Fulfilling testing intent using with TestTarget: {}'.format(featureToTest)
+            'content': 'Fulfilling testing intent using with TestTarget: {}'.format(feature_to_test)
         }
     )
+
 
 # --- Intent router ---
 
@@ -633,7 +598,8 @@ def dispatch(intent_request):
     Called when the user specifies an intent for this bot.
     """
 
-    logger.debug('dispatch userId={}, intentName={}'.format(intent_request['userId'], intent_request['currentIntent']['name']))
+    logger.debug(
+        'dispatch userId={}, intentName={}'.format(intent_request['userId'], intent_request['currentIntent']['name']))
 
     intent_name = intent_request['currentIntent']['name']
 
