@@ -21,8 +21,7 @@ import logging
 import boto3
 import random
 
-# import aws_xray sdk
-from aws_xray_sdk.core import xray_recorder
+
 from aws_xray_sdk.core import patch_all
 # patch boto3 for instrumentation and tracing via xray
 patch_all()
@@ -242,8 +241,8 @@ def getComprehendSentimentResult(stringToAnalyze):
         Text=stringToAnalyze,
         LanguageCode='en')
     del comprehendClientResponse['ResponseMetadata']
-    print comprehendClientResponse['SentimentScore'][comprehendClientResponse['Sentiment'].title()]
-    comprehendClientResponse[u'Confidence'] = comprehendClientResponse['SentimentScore'][comprehendClientResponse['Sentiment'].title()]
+    print(comprehendClientResponse['SentimentScore'][comprehendClientResponse['Sentiment'].title()])
+    comprehendClientResponse['Confidence'] = comprehendClientResponse['SentimentScore'][comprehendClientResponse['Sentiment'].title()]
     del comprehendClientResponse['SentimentScore']
     return comprehendClientResponse
 
